@@ -3,30 +3,45 @@ package com.harriahola;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics2D;
+import java.awt.Color;
+
 import javax.imageio.ImageIO;
 
 public class PngToAsciiConverter {
     private static final String ASCII_CHARS = "@#&$%*o!;.";
 
-    public static void convert(String filename, Boolean saveInAscii) {
-
+    public static void convert(String filename, Boolean saveInAscii, String outputFilename) {
         if (filename == null) {
             filename = "input.png";
         }
         if (saveInAscii == null) {
+
             saveInAscii = true;
+        }
+        if (outputFilename == null) {
+            outputFilename = "output.png";
+        }
+        if (!Files.exists(Paths.get(filename))) {
+            System.out.println("ERROR: Please provide a valid input image!");
+            return;
         }
 
         try {
-            // Load the input image
-            BufferedImage image = ImageIO.read(new File(filename));
             
+            
+            BufferedImage image = ImageIO.read(new File(filename));
+
             // Resize the image to a smaller size
             int newWidth = 80;
             int newHeight = (int) Math.round(image.getHeight() * (double) newWidth / image.getWidth());
             BufferedImage resizedImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_RGB);
             resizedImage.createGraphics().drawImage(image, 0, 0, newWidth, newHeight, null);
-            
+
             // Convert the image to ASCII art
             StringBuilder asciiImage = new StringBuilder();
             for (int y = 0; y < newHeight; y++) {
@@ -41,12 +56,45 @@ public class PngToAsciiConverter {
                 }
                 asciiImage.append('\n');
             }
-            
+
             if (saveInAscii) {
                 // Print the ASCII art to the console
                 System.out.println(asciiImage.toString());
+            } else {
+
+                // Convert the ASCII art to a BufferedImage
+                String asciiArt = asciiImage.toString();
+                int width = asciiArt.indexOf('\n');
+                int height = asciiArt.length() / (width + 1);
+                Font font = new Font("Monospaced", Font.PLAIN, 12);
+                FontMetrics fontMetrics = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB).createGraphics()
+                        .getFontMetrics(font); 
+                int fontHeight = fontMetrics.getHeight();
+                int fontWidth = fontMetrics.charWidth('M');
+                BufferedImage asciiToImage = new BufferedImage(width * fontWidth, height * fontHeight,
+                        BufferedImage.TYPE_INT_RGB);
+                Graphics2D graphics = asciiToImage.createGraphics();
+                graphics.setFont(font);
+                graphics.setBackground(Color.MAGENTA);
+                graphics.clearRect(0, 0, asciiToImage.getWidth(), asciiToImage.getHeight());
+                for (int y = 0; y < height; y++) {
+                    for (int x = 0; x < width; x++) {
+                        int index = y * (width + 1) + x;
+                        char ch = asciiArt.charAt(index);
+                        graphics.drawString(Character.toString(ch), x * fontWidth,
+                                (y + 1) * fontHeight - fontMetrics.getDescent());
+                    }
+                }
+
+                try {
+                    File outputFile = new File(outputFilename);
+                    ImageIO.write(asciiToImage, "png", outputFile);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
             }
-            
+
         } catch (IOException e) {
             e.printStackTrace();
         }
