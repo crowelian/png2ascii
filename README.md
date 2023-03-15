@@ -8,7 +8,7 @@ Convert a png image to ascii art or as a png image.
 - fix ascii png image width & height
 
 ## Usage
-example + params: input + print as ascii + output:
+example + params: input + print as ascii + output + desiredHeight:
 ```bash
-java -cp ./png2ascii-1.0-SNAPSHOT.jar com.harriahola.App "../input.png" "false" "../output.png"
+java -cp ./png2ascii-1.0-SNAPSHOT.jar com.harriahola.App "../input.png" "false" "../output.png" 200 
 ```
